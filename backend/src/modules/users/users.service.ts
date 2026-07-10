@@ -31,4 +31,21 @@ export class UsersService {
       where: { id },
     });
   }
+
+  async findByIdWithSensitiveFields(id: number) {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .addSelect('user.refreshToken')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  async updateRefreshToken(userId: number, refreshToken: string | null) {
+    await this.userRepository.update(userId, { refreshToken });
+  }
+
+  async clearRefreshToken(userId: number) {
+    await this.updateRefreshToken(userId, null);
+  }
 }

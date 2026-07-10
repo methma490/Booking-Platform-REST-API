@@ -1,12 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getRoot() {
+    return {
+      name: 'Booking Platform REST API',
+      version: '1.0.0',
+      status: 'Running',
+      documentation: '/api',
+      timestamp: new Date().toISOString(),
+    };
   }
 }

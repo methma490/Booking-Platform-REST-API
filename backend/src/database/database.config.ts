@@ -17,4 +17,7 @@ export const createDatabaseConfig = (
   autoLoadEntities: true,
 
   synchronize: configService.get<boolean>('database.synchronize', true),
+
+  migrations: ['dist/database/migrations/*.js'],
+  migrationsRun: configService.get<boolean>('database.migrationsRun', false),
 });

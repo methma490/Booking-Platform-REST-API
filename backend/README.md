@@ -2,6 +2,69 @@
 
 A comprehensive REST API for managing services and customer bookings, built with NestJS, TypeScript, and PostgreSQL.
 
+## Project Overview
+
+This Booking Platform REST API provides a complete backend solution for service-based businesses to manage their services and customer bookings. The system includes:
+
+- **User Authentication**: Secure JWT-based authentication with role-based access control
+- **Service Management**: Admins can create, update, and delete services
+- **Booking System**: Customers can book services with validation and business rules
+- **Admin Dashboard**: Admins can view all bookings and users
+- **API Documentation**: Interactive Swagger documentation for easy testing
+
+The API follows RESTful principles and includes comprehensive validation, error handling, and security features.
+
+## Quick Start
+
+**Swagger API Documentation**: http://localhost:3000/api
+
+Start the server:
+```bash
+npm run start:dev
+```
+
+### Quick Test with Swagger
+
+1. Open http://localhost:3000/api in your browser
+2. **Register a user**: POST `/auth/register`
+   ```json
+   {
+     "fullName": "John Doe",
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+3. **Login**: POST `/auth/login` to get your JWT token
+   ```json
+   {
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+4. **Authorize in Swagger**: Click the 🔓 button, paste your access token
+5. **Create a service** (requires admin token): POST `/services`
+   ```json
+   {
+     "title": "Haircut",
+     "description": "Professional haircut service",
+     "duration": 30,
+     "price": 25.00,
+     "isActive": true
+   }
+   ```
+6. **Create a booking** (no auth required): POST `/bookings`
+   ```json
+   {
+     "customerName": "John Doe",
+     "customerEmail": "john@example.com",
+     "customerPhone": "1234567890",
+     "serviceId": "<service-uuid-from-step-5>",
+     "bookingDate": "2027-12-25",
+     "bookingTime": "14:30",
+     "notes": "First time customer"
+   }
+   ```
+
 ## Features
 
 - **Authentication**: JWT-based authentication with access and refresh tokens
@@ -58,7 +121,7 @@ backend/
 └── package.json
 ```
 
-## Installation
+## Installation Steps
 
 ### Prerequisites
 
@@ -84,41 +147,117 @@ npm install
 cp .env.example .env
 ```
 
+## Environment Variables
+
 Edit `.env` with your configuration:
+
 ```env
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_postgres_password
 DB_DATABASE=booking_platform
 DB_SYNCHRONIZE=true
+DB_MIGRATIONS_RUN=false
 
+# JWT Configuration
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRES_IN=1d
 JWT_REFRESH_SECRET=your_refresh_secret_key
 JWT_REFRESH_EXPIRES_IN=7d
+
+# Server Configuration
+PORT=3000
 ```
+
+### Environment Variables Description
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `DB_HOST` | PostgreSQL host address | `localhost` | Yes |
+| `DB_PORT` | PostgreSQL port | `5432` | Yes |
+| `DB_USERNAME` | PostgreSQL username | `postgres` | Yes |
+| `DB_PASSWORD` | PostgreSQL password | — | Yes |
+| `DB_DATABASE` | Database name | `booking_platform` | Yes |
+| `DB_SYNCHRONIZE` | Auto-sync schema (dev only) | `true` | No |
+| `DB_MIGRATIONS_RUN` | Auto-run migrations on start | `false` | No |
+| `JWT_SECRET` | JWT signing secret | — | Yes |
+| `JWT_EXPIRES_IN` | Access token expiry time | `1d` | No |
+| `JWT_REFRESH_SECRET` | Refresh token signing secret | — | Yes |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiry time | `7d` | No |
+| `PORT` | Server port | `3000` | No |
+
+## Database Setup
+
+### Option 1: Using Docker (Recommended)
+
+```bash
+docker-compose up -d
+```
+
+This will start PostgreSQL and the application together.
+
+### Option 2: Manual PostgreSQL Setup
 
 4. Create PostgreSQL database:
 ```bash
 createdb booking_platform
 ```
 
-5. (Optional) Generate and run migrations:
+## Running Migrations
+
+### What are Database Migration Files?
+
+Database migration files are TypeScript files that define changes to your database schema over time. They allow you to:
+
+- **Version control your database schema**
+- **Roll back changes if needed**
+- **Deploy consistent database structures across environments**
+- **Track schema changes in your codebase**
+
+Migration files are stored in the `migrations/` directory (generated when you run migration commands) and contain SQL or TypeScript code to create/modify tables, add columns, create indexes, etc.
+
+### When to Use Migrations vs Synchronize
+
+- **Development**: Use `DB_SYNCHRONIZE=true` for automatic schema updates (faster development)
+- **Production**: Use `DB_SYNCHRONIZE=false` and migrations for controlled, versioned changes
+
+### Migration Commands
+
 ```bash
-# Generate a migration
+# Generate a migration based on entity changes
 npm run migration:generate -- -n MigrationName
 
-# Run migrations
+# Run all pending migrations
 npm run migration:run
 
-# Revert last migration
+# Revert the last migration
 npm run migration:revert
+
+# Show all migrations
+npm run typeorm -- migration:show -d src/database/data-source.ts
 ```
 
-> **Note**: By default, the application uses `DB_SYNCHRONIZE=true` which automatically creates/updates tables. For production, set `DB_SYNCHRONIZE=false` and use migrations instead.
+### Example Workflow
 
-6. Seed the admin user:
+1. Make changes to your entity files (e.g., add a new column to `ServiceEntity`)
+2. Generate a migration:
+   ```bash
+   npm run migration:generate -- -n AddServiceCategory
+   ```
+3. Review the generated migration file in `migrations/`
+4. Run the migration:
+   ```bash
+   npm run migration:run
+   ```
+
+> **Note**: By default, this application uses `DB_SYNCHRONIZE=true` for development. For production, set `DB_SYNCHRONIZE=false` and use migrations instead.
+
+### Seed the Database
+
+After setting up the database, seed the admin user:
+
 ```bash
 npm run seed
 ```
@@ -139,7 +278,17 @@ npm run start:dev
 ```
 
 The API will be available at `http://localhost:3000`  
-Swagger documentation at `http://localhost:3000/api`
+**Swagger documentation at `http://localhost:3000/api`**
+
+### Swagger API Documentation
+
+Access the interactive API documentation at: **http://localhost:3000/api**
+
+#### How to Authenticate in Swagger
+
+1. Click the **Authorize** button (🔒) at the top right
+2. Enter your JWT access token (obtained from `POST /auth/login`)
+3. Click **Authorize** — token will be sent as `Authorization: Bearer <token>` header
 
 ### Production Mode
 
@@ -256,9 +405,34 @@ Expected: `403 Forbidden`
 
 ---
 
-#### Step 7: Create a Booking (Customer token required)
+#### Step 7: Update Service (Admin Only)
 
-Authorize with customer token, then:
+Authorize with admin token, then:
+
+**Endpoint**: `PATCH /services/:id`
+
+```json
+{
+  "title": "Premium Haircut",
+  "price": 35.00
+}
+```
+
+Expected: `200 OK`
+
+---
+
+#### Step 8: Delete Service (Admin Only)
+
+Authorize with admin token, then:
+
+**Endpoint**: `DELETE /services/:id`
+
+Expected: `200 OK`
+
+---
+
+#### Step 9: Create a Booking (No authentication required)
 
 **Endpoint**: `POST /bookings`
 
@@ -278,7 +452,9 @@ Expected: `201 Created`
 
 ---
 
-#### Step 8: View Bookings (Authenticated)
+#### Step 10: View Bookings (Authenticated)
+
+Authorize with any token, then:
 
 **Endpoint**: `GET /bookings`
 ```
@@ -288,7 +464,7 @@ Expected: `200 OK` with paginated results
 
 ---
 
-#### Step 9: Admin Views All Bookings
+#### Step 11: Admin Views All Bookings
 
 Authorize with admin token, then:
 
@@ -298,7 +474,7 @@ Expected: `200 OK`
 
 ---
 
-#### Step 10: Customer Cannot Use Admin Endpoint (Should Return 403)
+#### Step 12: Customer Cannot Use Admin Endpoint (Should Return 403)
 
 Authorize with customer token, then:
 
@@ -308,7 +484,9 @@ Expected: `403 Forbidden`
 
 ---
 
-#### Step 11: Update Booking Status
+#### Step 13: Update Booking Status
+
+Authorize with any token, then:
 
 **Endpoint**: `PATCH /bookings/:id/status`
 
@@ -322,7 +500,9 @@ Expected: `200 OK`
 
 ---
 
-#### Step 12: Cancel Booking
+#### Step 14: Cancel Booking
+
+Authorize with any token, then:
 
 **Endpoint**: `PATCH /bookings/:id/cancel`
 
@@ -330,7 +510,7 @@ Expected: `200 OK`
 
 ---
 
-#### Step 13: Cancelled → Completed Should Fail
+#### Step 15: Cancelled → Completed Should Fail
 
 Try updating a cancelled booking to COMPLETED:
 
@@ -346,7 +526,7 @@ Expected: `400 Bad Request` – "Cancelled booking cannot be marked as completed
 
 ---
 
-#### Step 14: Duplicate Booking Should Return 409
+#### Step 16: Duplicate Booking Should Return 409
 
 Try creating the same booking (same serviceId + date + time):
 
@@ -354,7 +534,7 @@ Expected: `409 Conflict`
 
 ---
 
-#### Step 15: Refresh Access Token
+#### Step 17: Refresh Access Token
 
 **Endpoint**: `POST /auth/refresh-token`
 
@@ -368,7 +548,7 @@ Expected: `200 OK` with new tokens
 
 ---
 
-#### Step 16: Logout
+#### Step 18: Logout
 
 **Endpoint**: `POST /auth/logout`
 Expected: `200 OK`
@@ -401,7 +581,7 @@ Expected: `200 OK`
 
 | Method | Endpoint | Auth | Role | Description |
 |--------|----------|------|------|-------------|
-| POST | `/bookings` | ✅ | Any | Create booking |
+| POST | `/bookings` | ❌ | — | Create booking (public) |
 | GET | `/bookings` | ✅ | Any | Get all bookings (paginated, search, filter) |
 | GET | `/bookings/admin/all` | ✅ | ADMIN | Admin view of all bookings |
 | GET | `/bookings/:id` | ✅ | Any | Get booking by ID |
@@ -475,7 +655,7 @@ Expected: `200 OK`
    - All users (authenticated and unauthenticated) can view services
 
 3. **Booking Creation**:
-   - Any authenticated user can create a booking
+   - Anyone (authenticated or unauthenticated) can create a booking
    - Booking must reference an existing, valid service
    - Booking date cannot be in the past
    - Duplicate bookings for the same service, date, and time are prevented (HTTP 409)
@@ -489,21 +669,91 @@ Expected: `200 OK`
 
 ---
 
-## Environment Variables
+## API Documentation
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_USERNAME` | PostgreSQL username | `postgres` |
-| `DB_PASSWORD` | PostgreSQL password | — |
-| `DB_DATABASE` | Database name | `booking_platform` |
-| `DB_SYNCHRONIZE` | Auto-sync schema (dev only) | `true` |
-| `DB_MIGRATIONS_RUN` | Auto-run migrations on start | `false` |
-| `JWT_SECRET` | JWT signing secret | — |
-| `JWT_EXPIRES_IN` | Access token expiry | `1d` |
-| `JWT_REFRESH_SECRET` | Refresh token signing secret | — |
-| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiry | `7d` |
+### Swagger/OpenAPI Documentation
+
+The API includes interactive Swagger documentation that allows you to:
+
+- **Explore all endpoints** with detailed descriptions
+- **Test API calls** directly from the browser
+- **View request/response schemas**
+- **Authenticate** using JWT tokens
+
+**Access Swagger at**: http://localhost:3000/api
+
+### Authentication in Swagger
+
+1. Click the **Authorize** button (🔓) at the top right of the Swagger UI
+2. Enter your JWT access token (obtained from `POST /auth/login`)
+3. Click **Authorize**
+4. The token will be sent as `Authorization: Bearer <token>` header for all authenticated requests
+
+### API Endpoint Categories
+
+#### Authentication Endpoints
+- `POST /auth/register` - Register a new user
+- `POST /auth/login` - Login and receive tokens
+- `POST /auth/refresh-token` - Refresh access token
+- `GET /auth/me` - Get current user profile
+- `POST /auth/logout` - Logout and clear refresh token
+
+#### Service Endpoints
+- `POST /services` - Create a service (Admin only)
+- `GET /services` - Get all services (Public)
+- `GET /services/:id` - Get service by ID (Public)
+- `PATCH /services/:id` - Update service (Admin only)
+- `DELETE /services/:id` - Delete service (Admin only)
+
+#### Booking Endpoints
+- `POST /bookings` - Create a booking (Public)
+- `GET /bookings` - Get all bookings with pagination (Authenticated)
+- `GET /bookings/admin/all` - Get all bookings (Admin only)
+- `GET /bookings/:id` - Get booking by ID (Authenticated)
+- `PATCH /bookings/:id/status` - Update booking status (Authenticated)
+- `PATCH /bookings/:id/cancel` - Cancel booking (Authenticated)
+
+#### User Endpoints
+- `GET /users` - Get all users (Admin only)
+- `GET /users/:id` - Get user by ID (Admin only)
+
+### Response Format
+
+All API responses follow a consistent format:
+
+**Success Response (2xx)**
+```json
+{
+  "id": 1,
+  "title": "Haircut",
+  "description": "Professional haircut service",
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Error Response (4xx/5xx)**
+```json
+{
+  "statusCode": 400,
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "path": "/bookings",
+  "message": "Booking date cannot be in the past"
+}
+```
+
+### HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Request successful |
+| `201` | Resource created successfully |
+| `400` | Bad request - validation error or invalid data |
+| `401` | Unauthorized - missing or invalid token |
+| `403` | Forbidden - insufficient permissions |
+| `404` | Resource not found |
+| `409` | Conflict - duplicate resource |
+| `500` | Internal server error |
 
 ---
 
@@ -520,15 +770,38 @@ Expected: `200 OK`
 
 ## Future Improvements
 
-1. **Email Notifications**: Send confirmation emails for bookings
-2. **Rate Limiting**: Implement rate limiting with `@nestjs/throttler`
-3. **Caching**: Add Redis caching for frequently accessed services data
-4. **Logging**: Implement structured logging with `winston` or `pino`
-5. **API Versioning**: Add versioning to API endpoints (`/v1/...`)
-6. **File Upload**: Add support for service images
-7. **Payment Integration**: Integrate payment gateway for booking payments
-8. **Service Availability**: Add service slot availability management
-9. **User Profile Updates**: Allow users to update their own profile
+### Security & Performance
+1. **Rate Limiting**: Implement rate limiting with `@nestjs/throttler` to prevent API abuse
+2. **Caching**: Add Redis caching for frequently accessed services data to reduce database load
+3. **Logging**: Implement structured logging with `winston` or `pino` for better debugging and monitoring
+4. **Request Validation**: Add more advanced validation rules and custom validators
+
+### Features
+5. **Email Notifications**: Send confirmation emails for bookings and status updates
+6. **File Upload**: Add support for service images and user avatars
+7. **Payment Integration**: Integrate payment gateway (Stripe, PayPal) for booking payments
+8. **Service Availability**: Add service slot availability management and calendar view
+9. **User Profile Updates**: Allow users to update their own profile information
+10. **Booking Reminders**: Implement automated reminders before booking time
+
+### Architecture & Scalability
+11. **API Versioning**: Add versioning to API endpoints (`/v1/...`, `/v2/...`)
+12. **Microservices**: Split into microservices for better scalability (auth, bookings, services)
+13. **Message Queue**: Implement RabbitMQ or Kafka for asynchronous processing
+14. **Database Optimization**: Add database indexes, query optimization, and read replicas
+15. **CDN Integration**: Use CDN for static assets and file uploads
+
+### Testing & Quality
+16. **Unit Tests**: Add comprehensive unit tests for all services and controllers
+17. **E2E Tests**: Implement end-to-end testing with Playwright or Cypress
+18. **Integration Tests**: Add integration tests for database operations
+19. **Code Quality**: Set up ESLint, Prettier, and Husky for pre-commit hooks
+20. **CI/CD Pipeline**: Implement GitHub Actions or GitLab CI for automated testing and deployment
+
+### Documentation
+21. **API Documentation**: Enhance Swagger documentation with more examples and descriptions
+22. **Developer Guide**: Add detailed developer guide for contributing to the project
+23. **Architecture Diagrams**: Include architecture diagrams and system design documentation
 
 ---
 
